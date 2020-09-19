@@ -402,14 +402,6 @@ if (-not (Test-Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Adv
 }
 New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People -Name PeopleBand -PropertyType DWord -Value 0 -Force
 
-# Show seconds on taskbar clock
-# Отображать секунды в системных часах на панели задач
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name ShowSecondsInSystemClock -PropertyType DWord -Value 1 -Force
-
-# Do not show when snapping a window, what can be attached next to it
-# Не показывать при прикреплении окна, что можно прикрепить рядом с ним
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name SnapAssist -PropertyType DWord -Value 0 -Force
-
 # Show more details in file transfer dialog
 # Развернуть диалог переноса файлов
 if (-not (Test-Path -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\OperationStatusManager))
@@ -445,25 +437,9 @@ if (-not (Test-Path -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explo
 }
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{31C0DD25-9439-4F12-BF41-7FF4EDA38722}\PropertyBag" -Name ThisPCPolicy -PropertyType String -Value Hide -Force
 
-# Do not show "Frequent folders" in Quick access
-# Не показывать недавно используемые папки на панели быстрого доступа
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer -Name ShowFrequent -PropertyType DWord -Value 0 -Force
-
-# Do not show "Recent files" in Quick access
-# Не показывать недавно использовавшиеся файлы на панели быстрого доступа
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer -Name ShowRecent -PropertyType DWord -Value 0 -Force
-
-# Hide search box or search icon on taskbar
-# Скрыть поле или значок поиска на панели задач
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Search -Name SearchboxTaskbarMode -PropertyType DWord -Value 0 -Force
-
 # Do not show "Windows Ink Workspace" button in taskbar
 # Не показывать кнопку Windows Ink Workspace на панели задач
 New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\PenWorkspace -Name PenWorkspaceButtonDesiredVisibility -PropertyType DWord -Value 0 -Force
-
-# Always show all icons in the notification area
-# Всегда отображать все значки в области уведомлений
-New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer -Name EnableAutoTray -PropertyType DWord -Value 0 -Force
 
 # Unpin Microsoft Edge and Microsoft Store from taskbar
 # Открепить Microsoft Edge и Microsoft Store от панели задач
@@ -798,12 +774,6 @@ if ((Get-ItemPropertyValue -Path HKCU:\Software\Microsoft\Windows\CurrentVersion
 # Разрешить Windows исправлять размытость в приложениях
 New-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name EnablePerProcessSystemDPI -PropertyType DWord -Value 1 -Force
 
-# Turn off hibernate if device is not a laptop
-# Отключить режим гибернации, если устройство не является ноутбуком
-if ((Get-CimInstance -ClassName Win32_ComputerSystem).PCSystemType -ne 2)
-{
-	POWERCFG /HIBERNATE OFF
-}
 
 # Turn off location access for this device
 # Отключить доступ к сведениям о расположении для этого устройства
@@ -897,10 +867,6 @@ if (-not (Test-Path -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Polici
 	New-Item -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Attachments -Force
 }
 New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Attachments -Name SaveZoneInformation -PropertyType DWord -Value 1 -Force
-
-# Turn off Admin Approval Mode for administrators
-# Отключить использование режима одобрения администратором для встроенной учетной записи администратора
-New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -PropertyType DWord -Value 0 -Force
 
 # Turn on access to mapped drives from app running with elevated permissions with Admin Approval Mode enabled
 # Включить доступ к сетевым дискам при включенном режиме одобрения администратором при доступе из программ, запущенных с повышенными правами
@@ -1087,14 +1053,6 @@ $CheckedCapabilities = @(
 	# Факсы и сканирование Windows
 	"Print.Fax.Scan*"
 )
-# If device is not a laptop
-# Если устройство не является ноутбуком
-if ((Get-CimInstance -ClassName Win32_ComputerSystem).PCSystemType -ne 2)
-{
-	# Windows Hello Face
-	# Распознавание лиц Windows Hello
-	$CheckedCapabilities += "Hello.Face*"
-}
 # Windows capabilities that will be shown in the form
 # Дополнительные компоненты Windows, которые будут выводиться в форме
 $ExcludedCapabilities = @(
@@ -2030,13 +1988,6 @@ New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name 
 #endregion System
 
 #region Start menu
-# Do not show recently added apps in Start menu
-# Не показывать недавно добавленные приложения в меню "Пуск"
-if (-not (Test-Path -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer))
-{
-	New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer -Force
-}
-New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer -Name HideRecentlyAddedApps -PropertyType DWord -Value 1 -Force
 
 # Do not show app suggestions in Start menu
 # Не показывать рекомендации в меню "Пуск"
@@ -2559,7 +2510,19 @@ The extension can be installed without Microsoft account
 if (Get-AppxPackage -Name Microsoft.ZuneVideo)
 {
 	Start-Process -FilePath ms-windows-store://pdp/?ProductId=9n4wgh0z6vhq
+	echo "Waiting 25 seconds for user to trigger app installation"
+	Start-Sleep -Seconds 25
 }
+
+<#
+Open Microsoft Store "Raw-Bilderweiterung"
+#>
+
+if (Get-AppxPackage -Name Microsoft.Windows.Photos)
+{
+	Start-Process -FilePath ms-windows-store://pdp/?ProductId=9nctdw2w1bh8
+}
+
 
 # Turn off Cortana autostarting
 # Удалить Кортана из автозагрузки
@@ -3352,21 +3315,6 @@ New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\cmdfile\shell\print -Name Pro
 # Скрыть пункт "Добавить в библиотеку" из контекстного меню
 New-ItemProperty -Path "Registry::HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\Library Location" -Name "(Default)" -PropertyType String -Value "-{3dad6c5d-2167-4cae-9914-f99e41c12cfa}" -Force
 
-# Hide the "Send to" item from the folders context menu
-# Скрыть пункт "Отправить" из контекстного меню папок
-New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers\SendTo -Name "(Default)" -PropertyType String -Value "-{7BA4C740-9E81-11CF-99D3-00AA004AE837}" -Force
-
-# Hide the "Turn on BitLocker" item from the context menu
-# Скрыть пункт "Включить BitLocker" из контекстного меню
-if (Get-WindowsEdition -Online | Where-Object -FilterScript {$_.Edition -eq "Professional" -or $_.Edition -like "Enterprise*"})
-{
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\encrypt-bde -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\encrypt-bde-elev -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\manage-bde -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\resume-bde -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\resume-bde-elev -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-	New-ItemProperty -Path Registry::HKEY_CLASSES_ROOT\Drive\shell\unlock-bde -Name ProgrammaticAccessOnly -PropertyType String -Value "" -Force
-}
 
 # Remove the "Bitmap image" item from the "New" context menu
 # Удалить пункт "Точечный рисунок" из контекстного меню "Создать"
@@ -3382,10 +3330,6 @@ if ((Get-WindowsCapability -Online -Name "Microsoft.Windows.WordPad*").State -eq
 	Remove-Item -Path Registry::HKEY_CLASSES_ROOT\.rtf\ShellNew -Force -ErrorAction Ignore
 }
 
-# Remove the "Compressed (zipped) Folder" item from the "New" context menu
-# Удалить пункт "Сжатая ZIP-папка" из контекстного меню "Создать"
-Remove-Item -Path Registry::HKEY_CLASSES_ROOT\.zip\CompressedFolder\ShellNew -Force -ErrorAction Ignore
-
 # Make the "Open", "Print", "Edit" context menu items available, when more than 15 items selected
 # Сделать доступными элементы контекстного меню "Открыть", "Изменить" и "Печать" при выделении более 15 элементов
 New-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer -Name MultipleInvokePromptMinimum -PropertyType DWord -Value 300 -Force
@@ -3398,9 +3342,6 @@ if (-not (Test-Path -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer))
 }
 New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer -Name NoUseStoreOpenWith -PropertyType DWord -Value 1 -Force
 
-# Hide the "Previous Versions" tab from files and folders context menu and the "Restore previous versions" context menu item
-# Скрыть вкладку "Предыдущие версии" в свойствах файлов и папок и пункт контекстного меню "Восстановить прежнюю версию"
-New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer -Name NoPreviousVersionsPage -PropertyType DWord -Value 1 -Force
 #endregion Context menu
 
 #region Refresh
