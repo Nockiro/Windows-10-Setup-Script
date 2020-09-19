@@ -2090,6 +2090,10 @@ New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name 
 # Перезапускать это устройство как можно быстрее, если для установки обновления требуется перезагрузка
 # Restart this device as soon as possible when a restart is required to install an update
 New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings -Name IsExpedited -PropertyType DWord -Value 1 -Force
+
+# Install Microsoft Print To PDF
+Enable-WindowsOptionalFeature -online -FeatureName Printing-PrintToPDFServices-Features -All
+
 #endregion System
 
 #region Start menu
